@@ -212,7 +212,7 @@ const HomePage = () => {
             maxPrice={priceRange[1]}
             onPriceChange={setPriceRange}
           />
-        </div>
+        </div> 
 
         {/* Main Content */}
         <div className="flex-1">
