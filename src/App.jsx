@@ -4,6 +4,10 @@ import HomePage from "./pages/ShopPage";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import Layout from "./components/shared/Layout";
 import { AuthContextProvider } from "./Context/AuthContext";
+import CartPage from "./pages/CartPage";
+import ProductManagement from "./admin/ProductsManagement";
+import Dashboard from "./admin/Dashboard";
+import UploadProductImage from "./admin/uploadImage";
 
 function App() {
   return (
@@ -12,8 +16,12 @@ function App() {
         {/* <NavBar /> */}
         <div className=" w-full ">
           <Routes>
-            <Route path="/" element={<Layout />} >
+            <Route path="/" element={<UploadProductImage />} >
             <Route index element={<HomePage />}/>
+            <Route path="/mycart" element={<CartPage />}/>
+            <Route path="/admin/dashboard" element={<Dashboard />}/>
+            
+            
             </Route>
           </Routes>
         </div>

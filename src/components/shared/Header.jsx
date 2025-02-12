@@ -198,7 +198,7 @@ export default function Header({sideBarOpen, setSideBarOpen}) {
 				<div className='flex justify-end items-center w-full gap-4'>
 					{/* Cart Icon */}
 					<button
-						onClick={() => navigate('/cart')}
+						onClick={() => navigate('/mycart')}
 						className="group inline-flex items-center rounded-sm p-1.5 text-gray-700 hover:text-opacity-100 hover:bg-gray-100 focus:outline-none active:bg-gray-100"
 					>
 						<AiOutlineShoppingCart fontSize={24} />
@@ -241,6 +241,20 @@ export default function Header({sideBarOpen, setSideBarOpen}) {
 										</div>
 									)}
 								</Menu.Item>
+								<Menu.Item>
+									{({ active }) => (
+										<div
+											onClick={() => navigate('/admin/dashboard')}
+											className={classNames(
+												active && 'bg-gray-100',
+												'active:bg-gray-200 rounded-sm px-4 py-2 text-gray-700 cursor-pointer focus:bg-gray-200'
+											)}
+										>
+											Back Office
+										</div>
+									)}
+								</Menu.Item>
+								
 								<Menu.Item>
 									{({ active }) => (
 										<div
