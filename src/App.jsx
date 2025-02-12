@@ -16,7 +16,7 @@ function App() {
         {/* <NavBar /> */}
         <div className=" w-full ">
           <Routes>
-            <Route path="/" element={<UploadProductImage />} >
+            <Route path="/" element={<Layout />} >
             <Route index element={<HomePage />}/>
             <Route path="/mycart" element={<CartPage />}/>
             <Route path="/admin/dashboard" element={<Dashboard />}/>
