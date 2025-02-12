@@ -131,7 +131,7 @@ const ProductManagement = () => {
           );
           resetForm();
           setIsModalOpen(false);
-         // notification("Product updated successfully!");
+         // notification("Product updated successfullys!");
           alert("Product updated successfully!");
         }
       }else{
