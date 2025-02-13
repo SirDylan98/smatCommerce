@@ -1,10 +1,12 @@
-
-import React, { useState, useEffect } from 'react';
-import { Search, Heart, ShoppingCart, Eye, SlidersHorizontal } from 'lucide-react';
+import React, { useState, useEffect } from "react";
 import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+  Search,
+  Heart,
+  ShoppingCart,
+  Eye,
+  SlidersHorizontal,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -13,11 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import {
-  Slider
-} from "@/components/ui/slider";
+  getAllProducts,
+  getProductsByCategory,
+  searchProduct,
+} from "@/Service/apiServices";
 
-// Component for price range slider
+
 const PriceRangeFilter = ({ minPrice, maxPrice, onPriceChange }) => (
   <div className="p-4 border rounded-lg mb-4">
     <h3 className="font-medium mb-4">Price Range</h3>
@@ -35,32 +40,42 @@ const PriceRangeFilter = ({ minPrice, maxPrice, onPriceChange }) => (
   </div>
 );
 
-const ProductCard = ({ title, price, originalPrice, discount, rating, reviews, image }) => (
+const ProductCard = ({ product }) => (
   <Card className="w-64">
     <CardContent className="p-0 relative">
-      {discount && (
-        <span className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-md text-sm">
-          -{discount}%
-        </span>
-      )}
       <div className="relative group">
-        <img src={image} alt={title} className="w-full h-48 object-cover" />
+        <img
+          src={`http://localhost:8086/api/v1/products/uploads/${product.productImage}`}
+          alt={product?.productName}
+          className="w-full h-48 object-cover"
+        />
         <div className="absolute top-2 right-2 flex flex-col gap-2">
-    
           <Button variant="ghost" size="icon" className="bg-white rounded-full">
             <Eye className="h-4 w-4" />
           </Button>
         </div>
       </div>
       <div className="p-4">
-        <h3 className="font-medium text-sm mb-2">{title}</h3>
+        <h3 className="font-medium text-sm mb-2">{product?.productName}</h3>
         <div className="flex gap-2 items-center">
-          <span className="text-red-500 font-bold">${price}</span>
-          <span className="text-gray-400 line-through text-sm">${originalPrice}</span>
+          {product?.onsale ? (
+            <>
+              <span className="text-red-500 font-bold">
+                ${product?.priceOnSale}
+              </span>
+              <span className="text-gray-400 line-through text-sm">
+                ${product?.productPrice}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="text-green-400  text-sm">
+                ${product?.productPrice}
+              </span>
+            </>
+          )}
         </div>
-        <div className="flex items-center gap-2 mt-2">
-      
-        </div>
+        <div className="flex items-center gap-2 mt-2"></div>
         <Button className="w-full mt-4">Add To Cart</Button>
       </div>
     </CardContent>
@@ -68,100 +83,126 @@ const ProductCard = ({ title, price, originalPrice, discount, rating, reviews, i
 );
 
 const HomePage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [sortBy, setSortBy] = useState('featured');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [sortBy, setSortBy] = useState("featured");
   const [priceRange, setPriceRange] = useState([0, 2000]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-
-  const allProducts = [
-    {
-      title: "Women's Summer Dress",
-      price: 89,
-      originalPrice: 120,
-      image: "https://plus.unsplash.com/premium_photo-1738779001459-3c2efd2f6e88?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwxfHx8ZW58MHx8fHx8",
-      category: "Woman's Fashion"
-    },
-    {
-      title: "Men's Casual Shirt",
-      price: 45,
-      originalPrice: 60,
-      discount: 25,
-      image: "https://plus.unsplash.com/premium_photo-1738935668154-08c71a4a63f0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
-      category: "Men's Fashion"
-    },
-
-  ];
-
   const categories = [
     "All Categories",
-    "Woman's Fashion",
-    "Men's Fashion",
-    "Electronics",
-    "Home & Lifestyle",
-    "Medicine",
-    "Sports & Outdoor",
-    "Baby's & Toys",
-    "Groceries & Pets",
-    "Health & Beauty"
+    "CLOTHES",
+    "FOOD",
+    "COMPUTER_ACCESSORIES",
+    "KITCHEN",
+    "MEN_WARE",
+    "GADGETS",
   ];
-
+  //=========================FETCH BY CATEGORY ========================
   useEffect(() => {
-    setIsLoading(true);
-    let results = [...allProducts];
-
-    if (selectedCategory !== 'all' && selectedCategory !== 'All Categories') {
-      results = results.filter(product => product.category === selectedCategory);
-    }
-
-
-    if (searchQuery) {
-      results = results.filter(product =>
-        product.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-
-    results = results.filter(product =>
-      product.price >= priceRange[0] && product.price <= priceRange[1]
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        if (selectedCategory == "All Categories") {
+          const getAllProductsResponse = await getAllProducts();
+          if (getAllProductsResponse.status == 200) {
+            setFilteredProducts(getAllProductsResponse.data.body);
+          }
+        } else {
+          const response = await getProductsByCategory(selectedCategory);
+          if (response.status == 200) {
+            setFilteredProducts(response.data.body);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [selectedCategory]);
+  useEffect(() => {
+    setFilteredProducts((prevFilteredProducts) =>
+      prevFilteredProducts.filter(
+        (product) =>
+          product.productPrice >= priceRange[0] &&
+          product.productPrice <= priceRange[1]
+      )
     );
+  }, [priceRange]);
+    //=========================FETCH BY PRODUCT FETCH ========================
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      setSelectedCategory("All");
+      let results = [];
+      try {
+        if (searchQuery && searchQuery != "") {
+          const searchResponse = await searchProduct(searchQuery);
+          if (searchResponse.status == 200) {
+            results = searchResponse.data.body;
+          }
+        } else {
+          const getAllProductsResponse = await getAllProducts(); 
+          console.log("====> The response is ", getAllProductsResponse);
+          console.log(
+            "====> The response2 is ",
+            getAllProductsResponse.data.body
+          );
+          results = [...getAllProductsResponse.data.body];
+        }
+        console.log("========> This is the result array ", results);
+        switch (sortBy) {
+          case "price-asc":
+            results.sort((a, b) => a.productPrice - b.productPrice);
+            break;
+          case "price-desc":
+            results.sort((a, b) => b.productPrice - a.productPrice);
+            break;
 
-    switch (sortBy) {
-      case 'price-asc':
-        results.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-desc':
-        results.sort((a, b) => b.price - a.price);
-        break;
-      case 'rating':
-        results.sort((a, b) => b.rating - a.rating);
-        break;
-      default:
- 
-        break;
-    }
+          default:
+            break;
+        }
+        console.log("=======> this is the result", results);
+        setFilteredProducts(results);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    setFilteredProducts(results);
-    setIsLoading(false);
-  }, [searchQuery, selectedCategory, sortBy, priceRange]);
+    fetchProducts(); 
+  }, [searchQuery, sortBy]); 
 
   return (
     <div className="max-w-full mx-auto px-4">
-            <div className="flex-1">
-          <div className="bg-black text-white p-12 rounded-lg relative overflow-hidden">
-            <img src="/api/placeholder/400/320" alt="iPhone" className="absolute right-0 top-0 h-full" />
-            <div className="w-1/2">
-             <img src="/api/placeholder/50/50" alt="Apple logo" className="mb-4" />
-              <h2 className="text-4xl font-bold mb-4">iPhone 14 Series</h2>
-             <p className="text-3xl mb-6">Up to 10% off Voucher</p>
-             <Button variant="outline" className="text-white border-white hover:bg-white hover:text-black">
-               Shop Now
-              </Button>
-           </div>
-         </div>
-         </div>
+      <div className="flex-1">
+        <div className="bg-black text-white p-12 rounded-lg relative overflow-hidden">
+          <img
+            src="/api/placeholder/400/320"
+            alt="iPhone"
+            className="absolute right-0 top-0 h-full"
+          />
+          <div className="w-1/2">
+            <img
+              src="/api/placeholder/50/50"
+              alt="Apple logo"
+              className="mb-4"
+            />
+            <h2 className="text-4xl font-bold mb-4">iPhone 14 Series</h2>
+            <p className="text-3xl mb-6">Up to 10% off Voucher</p>
+            <Button
+              variant="outline"
+              className="text-white border-white hover:bg-white hover:text-black"
+            >
+              Shop Now
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <div className="mb-6 flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm">
         <div className="flex-1 relative">
@@ -182,13 +223,11 @@ const HomePage = () => {
             <SelectItem value="featured">Featured</SelectItem>
             <SelectItem value="price-asc">Price: Low to High</SelectItem>
             <SelectItem value="price-desc">Price: High to Low</SelectItem>
-            <SelectItem value="rating">Highest Rated</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="flex gap-8 my-8">
-    
         <div className="w-64 space-y-6">
           <div className="border rounded-lg p-4">
             <h3 className="font-medium mb-4">Categories</h3>
@@ -198,7 +237,9 @@ const HomePage = () => {
                   key={category}
                   onClick={() => setSelectedCategory(category)}
                   className={`cursor-pointer p-2 rounded hover:bg-gray-100 ${
-                    selectedCategory === category ? 'bg-gray-100 font-medium' : ''
+                    selectedCategory === category
+                      ? "bg-gray-100 font-medium"
+                      : ""
                   }`}
                 >
                   {category}
@@ -206,13 +247,13 @@ const HomePage = () => {
               ))}
             </ul>
           </div>
-          
+
           <PriceRangeFilter
             minPrice={priceRange[0]}
             maxPrice={priceRange[1]}
             onPriceChange={setPriceRange}
           />
-        </div> 
+        </div>
 
         {/* Main Content */}
         <div className="flex-1">
@@ -224,7 +265,7 @@ const HomePage = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((product, index) => (
-                <ProductCard key={index} {...product} />
+                <ProductCard key={index} product={product} />
               ))}
             </div>
           )}

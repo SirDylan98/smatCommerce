@@ -14,16 +14,16 @@ export const createProduct = (product)=>{
 export const updateProduct = (product)=>{
     return axios.put(`${baseURL}products/update`,product);
 }
-export const getProfileCourseList = (employeeId)=>{
+export const getAllProducts = ()=>{
 
-    return axios.get(`${baseURL}getassignforcourse/${employeeId}`);
+    return axios.get(`${baseURL}products/getall`);
 
 }
-export const getCourseDetailsByID=(id)=>{
-   return axios.get(`${baseURL}getcoursedetails/${id}`);
+export const searchProduct=(searchKey)=>{
+   return axios.get(`${baseURL}products/search/${searchKey}`);
 }
-export const showallassignedcourses=(employeeId)=>{
-    return axios.get(`${baseURL}showallassignedcourses/${employeeId}`)
+export const getProductsByCategory=(category)=>{
+    return axios.get(`${baseURL}products/category/${category}`)
 }
 export const getProgressCourseList=(employeeId)=>{
     return axios.get(`${baseURL}getprogressresult/${employeeId}`)
