@@ -22,16 +22,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import axios from "axios";
-import { createProduct, updateProduct } from "@/Service/apiServices";
+import {
+  createProduct,
+  getAllProducts,
+  updateProduct,
+} from "@/Service/apiServices";
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
+  const [filteredProductsList, setFilteredProductsList] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState("");
+  const [errors, setErrors] = useState({
+    productName: "",
+    productPrice: "",
+    startingQuantity: "",
+    minimumReorderLevel: "",
+    productDescription: "",
+  });
   const [formData, setFormData] = useState({
     productName: "",
     productDescription: "",
@@ -73,7 +86,7 @@ const ProductManagement = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8086/api/v1/products/upload",
+        "http://localhost:8088/api/v1/products/upload",
         fileFormData,
         {
           headers: {
@@ -102,10 +115,40 @@ const ProductManagement = () => {
       setIsUploading(false);
     }
   };
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    //setSelectedCategory("All");
+    let results = [];
+    try {
+      const getAllProductsResponse = await getAllProducts();
+      console.log("====> The response is ", getAllProductsResponse);
+      console.log("====> The response2 is ", getAllProductsResponse.data.body);
+      results = [...getAllProductsResponse.data.body];
+
+      console.log("=======> this is the result", results);
+      setProducts(results);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("=======> " + JSON.stringify(formData));
+    if (!validateForm()) {
+      notification("Please fix the validation errors");
+      return;
+    }
+
+    if (!uploadedFileName) {
+      notification("Please upload an image first");
+      return;
+    }
     if (!uploadedFileName) {
       notification("Please upload an image first");
       return;
@@ -119,22 +162,23 @@ const ProductManagement = () => {
     };
     console.log("=======> " + JSON.stringify(productData));
     try {
-      if(editingProduct){
+      if (editingProduct) {
         const response = await updateProduct(productData);
 
         if (response.status === 200) {
           console.log("=====> this is the response ", response.data);
           setProducts((prev) =>
             prev.map((product) =>
-              product.id === response.data.body.id ? response.data.body : product
+              product.productCode === response.data.body.productCode
+                ? response.data.body
+                : product
             )
           );
           resetForm();
           setIsModalOpen(false);
-         // notification("Product updated successfullys!");
-          alert("Product updated successfully!");
+          notification("Product updated successfully!");
         }
-      }else{
+      } else {
         const response = await createProduct(productData);
 
         if (response.status === 200) {
@@ -143,10 +187,8 @@ const ProductManagement = () => {
           resetForm();
           setIsModalOpen(false);
           notification("Product created successfully!");
-          //alert("Product created successfully!");
         }
       }
-      
     } catch (error) {
       console.error("Error creating product:", error);
       notification(
@@ -155,7 +197,56 @@ const ProductManagement = () => {
       );
     }
   };
+  const validateForm = () => {
+    let tempErrors = {};
+    let isValid = true;
 
+    // Product Name validation
+    if (!formData.productName.trim()) {
+      tempErrors.productName = "Product name is required";
+      isValid = false;
+    } else if (formData.productName.length < 3) {
+      tempErrors.productName = "Product name must be at least 3 characters";
+      isValid = false;
+    }
+
+    // Price validation
+    if (!formData.productPrice || formData.productPrice <= 0) {
+      tempErrors.productPrice = "Price must be greater than 0";
+      isValid = false;
+    }
+
+    // Starting Quantity validation (only for new products)
+    if (!editingProduct) {
+      if (formData.startingQuantity < 0) {
+        tempErrors.startingQuantity = "Starting quantity cannot be negative";
+        isValid = false;
+      }
+    }
+
+    // Reorder Level validation (only for new products)
+    if (!editingProduct) {
+      if (formData.minimumReorderLevel < 0) {
+        tempErrors.minimumReorderLevel = "Reorder level cannot be negative";
+        isValid = false;
+      }
+    }
+
+    // Description validation
+    if (!formData.productDescription.trim()) {
+      tempErrors.productDescription = "Description is required";
+      isValid = false;
+    }
+
+    // Sale price validation
+    if (formData.onSale && formData.productOnSalePrice >= formData.productPrice) {
+      tempErrors.productOnSalePrice = "Sale price must be less than regular price";
+      isValid = false;
+    }
+
+    setErrors(tempErrors);
+    return isValid;
+  };
   const resetForm = () => {
     setFormData({
       productName: "",
@@ -186,15 +277,15 @@ const ProductManagement = () => {
   );
   const notification = (msg) => {
     toast(msg, {
-      position: toast.POSITION.BOTTOM_LEFT,
       autoClose: 2000,
-      style: { background: "#FCB040", color: "white" },
+      style: { background: "#000000", color: "white" },
     });
+    
   };
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <ToastContainer/>
+      <ToastContainer />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Product Management</h1>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -397,6 +488,7 @@ const ProductManagement = () => {
             placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            // onChange={(e)=>notification("ddddddddddddddddddddddddddd")}
             className="pl-10"
           />
         </div>
@@ -407,7 +499,7 @@ const ProductManagement = () => {
           <Card key={product.productCode} className="relative">
             <CardContent className="p-4">
               <img
-                src={`http://localhost:8086/api/v1/products/uploads/${product.productImage}`}
+                src={`http://localhost:8088/api/v1/products/uploads/${product.productImage}`}
                 alt={product.productName}
                 className="w-full h-48 object-cover rounded-lg mb-4"
               />

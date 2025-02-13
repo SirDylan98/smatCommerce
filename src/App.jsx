@@ -8,11 +8,12 @@ import CartPage from "./pages/CartPage";
 import ProductManagement from "./admin/ProductsManagement";
 import Dashboard from "./admin/Dashboard";
 import UploadProductImage from "./admin/uploadImage";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 function App() {
   return (
     <Router>
-      <AuthContextProvider>
+      {/* <AuthContextProvider> */}
         {/* <NavBar /> */}
         <div className=" w-full ">
           <Routes>
@@ -20,12 +21,13 @@ function App() {
             <Route index element={<HomePage />}/>
             <Route path="/mycart" element={<CartPage />}/>
             <Route path="/admin/dashboard" element={<Dashboard />}/>
+            <Route path="/payment-success" element={<PaymentSuccess />} />
             
             
             </Route>
           </Routes>
         </div>
-      </AuthContextProvider>
+      {/* </AuthContextProvider> */}
     </Router>
   );
 }

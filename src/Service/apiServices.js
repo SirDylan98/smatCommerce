@@ -1,7 +1,10 @@
 import axios from "axios";
 
 
-const baseURL = "http://localhost:8086/api/v1/"    // Dev Env
+const baseURL = "http://localhost:8088/api/v1/"    // Dev Env
+const baseURLCart = "http://localhost:8082/api/v1/"  
+const baseURLOrder = "http://localhost:8083/api/v1/"  
+const baseURLPayments = "http://localhost:8085/api/v1/" 
 //const baseURL = "http://40.123.249.217:3677/api/v2/" // Dev Env
 
 //const baseURL ="http://appsaas.southafricanorth.cloudapp.azure.com:3677/api/v2/"
@@ -25,27 +28,44 @@ export const searchProduct=(searchKey)=>{
 export const getProductsByCategory=(category)=>{
     return axios.get(`${baseURL}products/category/${category}`)
 }
-export const getProgressCourseList=(employeeId)=>{
-    return axios.get(`${baseURL}getprogressresult/${employeeId}`)
+
+//=========================Cart APIs =============================
+
+export const getUserCart=(userId)=>{
+    return axios.get(`${baseURL}carts/${userId}`)
 }
-export const getMyResults=(employeeId)=>{
-    return axios.get(`${baseURL}getmyresults/${employeeId}`)
+export const removeFromCart=(userId, productId)=>{
+    return axios.delete(`${baseURL}carts/${userId}/remove/${productId}`)
 }
-export const getQuizQuestion=(courseId)=>{
-    return axios.get(`${baseURL}getcoursequestions/${courseId}`)
+export const addToCart=(request)=>{
+    return axios.post(`${baseURL}carts/add`,request)
 }
-export const getallcourses=()=>{
-    return axios.get(`${baseURL}getallcourses`)
+export const subtractFromCart=(request)=>{
+    return axios.post(`${baseURL}carts/subtract`,request)
 }
-export const getEmployeeDetails=(employeeNumber)=>{
-    return axios.get(`${baseURL}getemployeedetails/${employeeNumber}`)
+
+//============================ Order APIs ======================
+
+export const checkOutCart=(request)=>{
+    return axios.post(`${baseURL}orders/create`,request)
 }
+
+//=============================Payment APIs =========================
+
 //getemployeeusername
-export const getEmployeeUserName=(employeeNumber)=>{
-    return axios.get(`${baseURL}getemployeeusername/${employeeNumber}`)
+export const getPaymentBySessionId=(sessionId)=>{
+    return axios.get(`${baseURL}payments/getpaymentbysessionid/${sessionId}`)
 }
-export const saveCourseResults=(score)=>{
-    return axios.post(`${baseURL}submitquizresults/`,score);
+//===========================Inventory apis =====================
+export const getAllInventory=()=>{
+    return axios.get(`${baseURL}inventory`)
+}
+export const updateInventoryLevel=(request)=>{
+    return axios.put(`${baseURL}inventory/update`,request);
+    
+ }
+ export const getInventoryAtReorderLevel=()=>{
+    return axios.get(`${baseURL}inventory/reorder-level`);
     
  }
  //=================================ADMIN ENDPOINTS======================================

@@ -17,11 +17,14 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import {
+  addToCart,
   getAllProducts,
   getProductsByCategory,
   searchProduct,
 } from "@/Service/apiServices";
-
+import { v4 as uuidv4 } from "uuid";
+import Banner from "@/components/shared/Banner";
+import { toast, ToastContainer } from "react-toastify";
 
 const PriceRangeFilter = ({ minPrice, maxPrice, onPriceChange }) => (
   <div className="p-4 border rounded-lg mb-4">
@@ -39,7 +42,29 @@ const PriceRangeFilter = ({ minPrice, maxPrice, onPriceChange }) => (
     </div>
   </div>
 );
+const handleAddToCart = async (productCode, productName) => {
+  let request = {
+    uniqueKey: uuidv4(), 
+    productId: productCode,
+    productName: productName, 
+    userId: "R1813716x",
+    quantity: 1,
+  };
 
+  console.log("====> This is Add to Cart Request Body", request);
+
+  try {
+    const response = await addToCart(request); 
+    if (response.status === 200) {
+      notification("Added to Cart Successfully");
+    } else {
+      toast.error("Error in adding to Cart");
+    }
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    toast.error("Something went wrong. Please try again.");
+  }
+};
 const ProductCard = ({ product }) => (
   <Card className="w-64">
     <CardContent className="p-0 relative">
@@ -76,7 +101,14 @@ const ProductCard = ({ product }) => (
           )}
         </div>
         <div className="flex items-center gap-2 mt-2"></div>
-        <Button className="w-full mt-4">Add To Cart</Button>
+        <Button
+          onClick={() =>
+            handleAddToCart(product.productCode, product.productName)
+          }
+          className="w-full mt-4"
+        >
+          Add To Cart
+        </Button>
       </div>
     </CardContent>
   </Card>
@@ -123,6 +155,15 @@ const HomePage = () => {
     };
     fetchProducts();
   }, [selectedCategory]);
+
+  const notification = (msg) => {
+    toast(msg, {
+      autoClose: 2000,
+      style: { background: "#000000", color: "white" },
+    });
+  };
+
+  //=========================Filter By PRODUCT Product Price Range ========================
   useEffect(() => {
     setFilteredProducts((prevFilteredProducts) =>
       prevFilteredProducts.filter(
@@ -132,7 +173,8 @@ const HomePage = () => {
       )
     );
   }, [priceRange]);
-    //=========================FETCH BY PRODUCT FETCH ========================
+
+  //=========================FETCH BY PRODUCT FETCH ========================
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
@@ -145,7 +187,7 @@ const HomePage = () => {
             results = searchResponse.data.body;
           }
         } else {
-          const getAllProductsResponse = await getAllProducts(); 
+          const getAllProductsResponse = await getAllProducts();
           console.log("====> The response is ", getAllProductsResponse);
           console.log(
             "====> The response2 is ",
@@ -174,35 +216,13 @@ const HomePage = () => {
       }
     };
 
-    fetchProducts(); 
-  }, [searchQuery, sortBy]); 
+    fetchProducts();
+  }, [searchQuery, sortBy]);
 
   return (
     <div className="max-w-full mx-auto px-4">
-      <div className="flex-1">
-        <div className="bg-black text-white p-12 rounded-lg relative overflow-hidden">
-          <img
-            src="/api/placeholder/400/320"
-            alt="iPhone"
-            className="absolute right-0 top-0 h-full"
-          />
-          <div className="w-1/2">
-            <img
-              src="/api/placeholder/50/50"
-              alt="Apple logo"
-              className="mb-4"
-            />
-            <h2 className="text-4xl font-bold mb-4">iPhone 14 Series</h2>
-            <p className="text-3xl mb-6">Up to 10% off Voucher</p>
-            <Button
-              variant="outline"
-              className="text-white border-white hover:bg-white hover:text-black"
-            >
-              Shop Now
-            </Button>
-          </div>
-        </div>
-      </div>
+      <Banner />
+      <ToastContainer/>
 
       <div className="mb-6 flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm">
         <div className="flex-1 relative">
