@@ -42,6 +42,12 @@ const PriceRangeFilter = ({ minPrice, maxPrice, onPriceChange }) => (
     </div>
   </div>
 );
+const notification = (msg) => {
+  toast(msg, {
+    autoClose: 2000,
+    style: { background: "#000000", color: "white" },
+  });
+};
 const handleAddToCart = async (productCode, productName) => {
   let request = {
     uniqueKey: uuidv4(), 
@@ -55,13 +61,13 @@ const handleAddToCart = async (productCode, productName) => {
 
   try {
     const response = await addToCart(request); 
-    if (response.status === 200) {
+    if (response.status == 200) {
       notification("Added to Cart Successfully");
     } else {
       toast.error("Error in adding to Cart");
     }
   } catch (error) {
-    console.error("Error adding to cart:", error);
+    console.log("Error adding to cart:", error);
     toast.error("Something went wrong. Please try again.");
   }
 };
@@ -156,12 +162,12 @@ const HomePage = () => {
     fetchProducts();
   }, [selectedCategory]);
 
-  const notification = (msg) => {
-    toast(msg, {
-      autoClose: 2000,
-      style: { background: "#000000", color: "white" },
-    });
-  };
+  // const notification = (msg) => {
+  //   toast(msg, {
+  //     autoClose: 2000,
+  //     style: { background: "#000000", color: "white" },
+  //   });
+  // };
 
   //=========================Filter By PRODUCT Product Price Range ========================
   useEffect(() => {
